@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN"      
+ "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<!-- namespace:命名空间，用来区分同名的sql。 id:在同一个文件里面唯一。 parameterType:参数类型。 resultType:返回的结果类型。 
+	#{ename}: ename是Emp的属性(mybatis 会利用反射机制读取emp对象的属性值)。 注意： 如果使用Mapper映射器，namespace 
+	必须等Mapper接口的完整的名称。 -->
+<!-- <select id="getMtypeList" resultType="java.util.HashMap"> -->
+<!-- select code,`name` from jk_control_measure -->
+<!-- </select> -->
+<mapper namespace="com.huawei.it.dao.DemoDao">
+	<insert id="insertCFGParameterInfos" parameterType="java.util.List">
+		begin
+		<foreach collection="list" item="info">
+			insert into cr_parameterconfig
+			(labelid,productcfgid,parametercode,sortno,inputtype,ismultivalue,manualvalue,valuechsdesc,valueengdesc,parachsdesc,paraengdesc)
+			values
+			(#{info.labelID,jdbcType=VARCHAR},#{info.productCfgID,jdbcType=VARCHAR},
+			#{info.sortNO,jdbcType=VARCHAR},#{info.inputType,jdbcType=VARCHAR},
+			#{info.isMultiValue,jdbcType=VARCHAR},#{info.manualValue,jdbcType=VARCHAR},
+			#{info.valueChsDesc,jdbcType=VARCHAR},#{info.valueEngDesc,jdbcType=VARCHAR},
+			#{info.paraChsDesc,jdbcType=VARCHAR},#{info.paraEngDesc,jdbcType=VARCHAR}
+			);
+		</foreach>
+		exception when others then
+		rollback;
+		RAISE_APPLICATION_ERROR(-20000,'Data exception and may be a violation
+		of the only constraint');
+		end;
+	</insert>
+	<!-- statementType="CALLABLE"告诉mybatis我们将用存储过程的方式去执行他。如果不声明她，程序将会抛出异常。 -->
+	<!-- 参数定义，mode=IN的时候为输入参数，mode=OUT的时候为输出参数，jdbcType定义为数据库的类型。 -->
+	<!-- 当我们这样写的时候mybatis会帮我们自动回填result和execDate，当然也可以使用Map -->
+	<select id="count" parameterType="com.gsstudy.it.entity.ProcedurePojo"
+		statementType="CALLABLE">
+		{call
+		count_role(#{roleName,mode=IN,jdbcType=VARCHAR},#{result,mode=OUT,jdbcType=INTEGER},#{execDate,mode=OUT,jdbcType=DATE})}
+	</select>
+	<delete id="deleteCRSolutionInfoAttrs" parameterType="java.util.List">
+		begin
+		<foreach collection="list" item="item">
+			delete from CR_SOLUTIONEXTATTR
+			solutionid = #{item};
+		</foreach>
+		end;
+	</delete>
+	<insert id="insetCRSolutionTradeInfo" parameterType="java.util.List">
+		begin
+		<foreach collection="list" item="info">
+			insert into
+			cr_tradeinfo(labelid,commercefeecode,value,crgroupid)
+			values
+			(#{info.labelID,jdbcType=VARCHAR},#{info.commerceFeeCode,jdbcType=VARCHAR},#{info.crGroupID,jdbcType=VARCHAR},
+			#{info.crGroupID,jdbcType=VARCHAR}
+			);
+		</foreach>
+		exception
+		when others then RAISE_APPLICATION_ERROR(-20000,'Data
+		exception and may be
+		a violation of the only constraint');
+		end;
+	</insert>
+<!-- 	在使用mybatis 时我们sql是写在xml -->
+<!-- 	映射文件中，如果写的sql中有一些特殊的字符的话，在解析xml文件的时候会被转义，但我们不希望他被转义，所以我们要使用<![CDATA[ ]]>来解决。 -->
+<!-- 	<![CDATA[   ]]> -->
+<!-- 	是什么，这是XML语法。在CDATA内部的所有内容都会被解析器忽略。 -->
+<!-- 	如果文本包含了很多的"<"字符 <=和"&"字符——就象程序代码一样，那么最好把他们都放到CDATA部件中。 -->
+<!-- 	但是有个问题那就是 -->
+<!-- 	<if test=""> -->
+<!-- 	</if> -->
+<!-- 	<where> -->
+<!-- 	</where> -->
+<!-- 	<choose> -->
+<!-- 	</choose> -->
+<!-- 	<trim> -->
+<!-- 	</trim> -->
+<!-- 	等这些标签都不会被解析，所以我们只把有特殊字符的语句放在 <![CDATA[   ]]> -->
+<!-- 	尽量缩小 <![CDATA[  ]]>的范围。 -->
+
+</mapper>
