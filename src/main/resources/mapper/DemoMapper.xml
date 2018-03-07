@@ -85,6 +85,57 @@
 			AND newsEdit=#{etidN.ame}
 		</if>
 	</select>
-
+	<select id="copyBoq" parameterType="java.util.Map" statementType="CALLABLE">
+	<![CDATA[ 
+		CALL SCTES_BOQ_PKG.copyBoq(#{boqId,jdbcType=NUMERIC,mode=IN},#{copyType,jdbcType=NUMERIC,mode=IN},#{shareRemark,jdbcType=CLOB,mode=IN})
+	]]>
+	</select>
+	<select id="findParameterValue" resultType="hashmap">
+		select
+		<if test="qtyType==0">b.existingvalue as value,</if>
+		<if test="qtyType==1">b.manualvalue as value,</if>
+		<if test="qtyType==2">b.manualvalue as value,</if>
+		<if test="qtyType==3">b.manualvalue as value,</if>
+		<if test="qtyType==4">b.standardvalue as value,</if>
+		c.siteqty as siteQty
+		from
+		UNISCT.prj_productcfgmodel a inner join UNISCT.prj_parameterconfigb b
+		on a.configurationmodelid = b.configurationmodelid inner join(
+		select configurationmodelid,sum(qty) as siteqty from UNISCT.prj_projectcfg
+		where projectid=#{boqID,jdbcType=VARCHAR}
+		<if test="siteName!=null">and sitename=#{siteName,jebcType=VARCHAR}</if>
+		<if test="dimensionModelID !=null">and configurationmodelid=#{dimensionModelID,jdbcType=VARCHAR}</if>
+		group by configurationmodelid)c
+		on a.configurationmodelid = c.configurationmodelid inner join
+		UNISCT.prj_productcfgmodelbase bs on a.configurationmodelid = bs.configurationmodelid
+		where b.manualvalue is not null
+		<if test="moduleCodes!=null">and a.modulecode in
+		<foreach collection="moduleCodes" item="moduleCode" open="()" close=")">
+		#{moduleCode,jdbcType=VARCHAR}
+		</foreach>
+		</if>
+		<if test="productCodes!=null">
+			and a.productcode in 
+			<foreach collection="productCodes" item="productCode" open="(" close=")">
+				#{productCode,jdbcType=VARCHAR}
+			</foreach>
+		</if>
+		<if test="parameterCode!=null">
+		and b.parametercode=#{parameterCode,jdbcType=VARCHAR}
+		</if>
+		<if test="dimensionModelID!=null">
+		and bs.producttypeid
+		<![CDATA[
+		<>
+		]]>
+		#{DIMENSIONpRODUCTtYPEid,jdbcType=NUMERIC}>
+		</if>
+	</select>
+<!--
+ #{}表示一个展位符号，通过#{}可以实现preparedStatement向占位符中设置值，自动进行java类型和jdbc类型转换，#{}可以有效防止sql注入
+ #{}可以接受简单类型的值或pojo属性值。如果parameterType传输单个简单类型值，#{}括号中可以是value或其他名称
+ ${}表示拼接字符串，通过${}可以将parameterType传入的类容拼接在sql中且不进行jdbc类型转换，
+ ${}可以接受简单类型值或pojo属性值，如果parameterType传输单个简单类型值，${}括号中只能是value
+ -->
 
 </mapper>
